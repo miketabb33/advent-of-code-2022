@@ -122,7 +122,6 @@ class FileSystemBuilder
   end
 end
 
-
 def sum_directories(dir, threshold = 100_000)
   sum = 0
 
@@ -136,14 +135,51 @@ def sum_directories(dir, threshold = 100_000)
   sum
 end
 
+min = 100_000_000
+
+def find_deletable_dir(dir, needed_space)
+  dir[:contents].each do |item|
+    if item[:kind] == :dir
+      find_deletable_dir(item, needed_space)
+      min = item[:total_size] if item[:total_size] > needed_space && item[:total_size] < min
+    end
+  end
+end
 
 def part_1(lines)
   root = FileSystemBuilder.make(lines)
-
-  puts sum_directories(root)
-  puts root
+  sum_directories(root)
 end
+
+def part_2(lines)
+  total_disk = 70_000_000
+  required_free = 30_000_000
+
+  root = FileSystemBuilder.make(lines)
+  used = root[:total_size]
+  unused = total_disk - used
+
+  needed_space = required_free - unused  
+
+  min = Float::INFINITY
+
+  find_deletable_dir = lambda do |dir|
+    dir[:contents].each do |item|
+      next unless item[:kind] == :dir
+
+      size = item[:total_size]
+      min = size if size >= needed_space && size < min
+
+      find_deletable_dir.call(item)
+    end
+  end
+
+  find_deletable_dir.call(root)
+  min
+end
+
 
 lines = File.read('./day7_input').lines
 
-part_1 lines
+# puts part_1 lines
+puts part_2 lines
