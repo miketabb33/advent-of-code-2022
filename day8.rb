@@ -59,7 +59,32 @@ def part_1(two_d_map)
   two_d_map.flatten.count { |tree| tree[:visible] }
 end
 
+def part_2(two_d_map)
+  scanner = Scanner.new(two_d_map)
+  totals = []
+
+  scan_2d(two_d_map) do |tree, x, y|
+    directions = %i[scan_up scan_left scan_down scan_right]
+    dir_arr = directions.map {|d| scanner.public_send(d, x, y).map { |t| t[:size] } }
+ 
+    scores = []
+
+    t_size = tree[:size]
+    dir_arr.each do |arr|
+      score = []
+      arr.each.each do |x|
+        score << x
+        break if t_size <= x
+      end
+      scores << score.size
+    end
+
+    totals << scores.inject(1, :*)
+  end
+  totals.max
+end
+
 lines = File.read('./day8_input').lines
 two_d_map = lines.map { |line| line.strip.split('').map { |x| { size: x.to_i } } }
 
-puts part_1(two_d_map)
+puts part_2(two_d_map)
